@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import { getJson } from '../api/client.js';
 
 type Props = {
   title: string;
   description: string;
-  endpoint: string;
+  load: () => Promise<Record<string, unknown>>;
   dataKey: string;
   emptyText: string;
 };
@@ -20,12 +19,12 @@ function displayValue(value: unknown): string {
   return String(value);
 }
 
-export function CapabilityCard({ title, description, endpoint, dataKey, emptyText }: Props) {
+export function CapabilityCard({ title, description, load, dataKey, emptyText }: Props) {
   const [state, setState] = useState<LoadState>({ status: 'loading' });
 
   useEffect(() => {
     let active = true;
-    getJson<Record<string, unknown>>(endpoint)
+    load()
       .then((payload) => {
         const items = payload[dataKey];
         if (!Array.isArray(items)) throw new Error('Unexpected API response');
@@ -35,7 +34,7 @@ export function CapabilityCard({ title, description, endpoint, dataKey, emptyTex
         if (active) setState({ status: 'error' });
       });
     return () => { active = false; };
-  }, [dataKey, endpoint]);
+  }, [dataKey, load]);
 
   return (
     <section className="card h-100">
